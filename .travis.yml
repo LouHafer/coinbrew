@@ -1,0 +1,100 @@
+language: cpp
+
+matrix:
+  include:
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="Osi"
+           FETCH_ARGS="--no-prompt"
+           FETCH=true
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="Osi@master" 
+           BUILD_ARGS="--enable-relocatable"
+           FETCH=true
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="https://github.com/tkralphs/Osi@stable/0.108" 
+           BUILD_ARGS="--enable-relocatable"
+           FETCH=true
+           UPDATE=true
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="https://github.com/tkralphs/Osi@master" 
+           BUILD_ARGS="--enable-debug"
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="Osi" 
+           BUILD_ARGS="--no-prompt ADD_CXXFLAGS=-DFOO"
+           INSTALL=true
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="Cbc@master" 
+           BUILD_ARGS="--skip='ThirdParty/Metis ThirdParty/Mumps'"
+           INSTALL=true
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="Osi@0.108"
+           BUILD_ARGS="--latest-release"
+    - os: linux
+      addons:
+        apt:
+          packages:
+          - gfortran
+      env: PROJECT="SYMPHONY@stable/5.6" 
+    - os: osx
+      osx_image: xcode12
+      env: OSX=10.15 
+           CC=gcc 
+           CXX=g++ 
+           PROJECT="Osi --no-prompt" 
+           BUILD_ARGS="ADD_CXXFLAGS=-DFOO"
+    - os: osx
+      osx_image: xcode12
+      env: OSX=10.15  
+           PROJECT="Osi --no-prompt" 
+      compiler: clang
+
+before_script:
+  - |-
+       if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+         if [ "$(brew list | fgrep bash)" != "bash" ]; then
+           brew install bash;
+         fi;
+         brew update;
+       fi
+
+script:
+  - |-
+      if [ "${FETCH:-}" = "true" ]; then
+        bash ./coinbrew fetch $PROJECT $FETCH_ARGS;
+      fi
+      bash ./coinbrew build $PROJECT $BUILD_ARGS
+      if [ "${INSTALL:-}" = "true" ]; then
+        bash ./coinbrew uninstall $PROJECT
+        bash ./coinbrew install $PROJECT
+      fi
+      if [ "${UPDATE:-}" = "true" ]; then
+         ./coinbrew fetch Osi --latest-release
+      fi         
